@@ -114,6 +114,7 @@ var
   counter  : integer;
   PoolName : string;
 Begin
+exit;
 For counter := 0 to length(ArrSources)-1 do
    begin
    PoolName := Format('%0:-17s',[ArrSources[counter].ip]);
@@ -238,6 +239,7 @@ var
   counter  : integer;
   PoolName : string;
 Begin
+exit;
 PoolName := Format('%0:-17s',[ArrSources[activepool].ip]);
 if length(PoolName)>16 then Setlength(PoolName,16);
 DLabel(3,13+ActivePool,PoolName,16,AlLeft,White,Blue);
@@ -252,13 +254,13 @@ End;
 Procedure PrintStatus(LText:String; LColor:integer);
 Begin
 if WaitingNextBlock then LText := '';
-DLabel(1,24,LText,70,AlCenter,LColor,Black);
+//DLabel(1,24,LText,70,AlCenter,LColor,Black);
 StatusMsg := '';
 End;
 
 Procedure UpdateTotalPending();
 Begin
-DLabel(41,13+length(ArrSources),Int2Curr(GetTotalPending),12,AlRight,White,green);
+DLabel(56,13,Int2Curr(GetTotalPending),12,AlRight,White,green);
 U_TotalPending := false;
 end;
 
@@ -280,7 +282,7 @@ var
   Thisfee : integer;
   thisrate : int64;
   Counter : integer;
-  DetectedPools : integer = 0;
+  DetectedPools : integer = 1;
   ThisBalance   : string;
   ThisPAyInterval : string;
   ThisShares      : string;
@@ -288,8 +290,11 @@ Begin
 DWindow(1,10,69,12,'',lightgray,black);
 TextOut(1,12,LChar[10],lightgray,black);
 TextOut(69,12,LChar[6],lightgray,black);
-TextOut(2,11,format(' %0:-17s | %6s | %6s | %12s | %3s | %6s ',['Pool','Count','Fee','Balance','Pay','Shares']),yellow,black);
-for counter :=0 to length(ArrSources)-1 do
+TextOut(1,13,LChar[10],lightgray,black);
+TextOut(69,13,LChar[6],lightgray,black);
+TextOut(3,11,'Noso project PoP coins distribution',lightgray,black);
+//TextOut(2,11,format(' %0:-17s | %6s | %6s | %12s | %3s | %6s ',['Pool','Count','Fee','Balance','Pay','Shares']),yellow,black);
+for counter :=0 to -1 do //length(ArrSources)-1 do
     begin
     PoolName := Format('%0:-17s',[ArrSources[counter].ip]);
     if length(PoolName)>16 then Setlength(PoolName,16);
@@ -301,14 +306,20 @@ for counter :=0 to length(ArrSources)-1 do
     ThisPayInterval := IntToStr(ArrSources[counter].payinterval);
     ThisShares      := IntToStr(ArrSources[counter].Shares)+'/'+ArrSources[counter].maxshares.ToString;
     TextOut(1,13+counter,format(Lchar[5]+' %-17s '+LChar[5]+' %6s '+LChar[5]+' %6s '+LChar[5]+' %12s '+LChar[5]+' %3s '+LChar[5]+' %6s '+LChar[5],[PoolName,ThisMiners,FormatFloat('0.00',ThisFee/100),ThisBalance,ThisPAyInterval,ThisShares]),lightgray,black);
-    Inc(DetectedPools)
+    //Inc(DetectedPools)
     end;
 HorizLine(13+DetectedPools,1,69,lightgray,black);
 TextOut(1,13+DetectedPools,LChar[9],white,black);
 TextOut(69,13+DetectedPools,LChar[7],white,black);
-if DetectedPools = 0 then
+if DetectedPools = 1 then
    begin
-   TextOut(1,12,'No pools listed',lightgray,black);
+   TextOut(3,13,'Pending rewards :',lightgray,black);
+   TextOut(3,15,' Disclaimer ',red,white);
+   TextOut(3,16,'Pending rewards are not guaranteed to be paid until participant',lightgray,black);
+   TextOut(3,17,'reach the minimun treshold active on each verificator. Those',lightgray,black);
+   TextOut(3,18,'earnings could also be re-distributed between other participants.',lightgray,black);
+   TextOut(3,19,'Do not consider pending as your coins until it is paid.',lightgray,black);
+   TextOut(3,20,'For more information read <<help>> page.',lightgray,black);
    end;
 End;
 
@@ -486,11 +497,8 @@ DLabel(18,25,' [M] Menu ',16,AlCenter,white,blue);
 Dlabel(2,8, '- Use one Noso address per device.',50,alLeft,white,black);
 Dlabel(2,9, '- Use a different public IPv4 per device.',50,alLeft,white,black);
 Dlabel(2,10,'- Your password must be between 8 to 16 chars length.',53,alLeft,white,black);
-Dlabel(2,11,'- Your password must contain only Base58 chars: ',50,alLeft,white,black);
-Dlabel(4,12,B58Alphabet,58,alLeft,green,white);
-Dlabel(2,13,'- For PoPW detailed information, visit ',50,alLeft,white,black);
-Dlabel(41,13,'https://docs.nosocoin.com',25,alLeft,green,black);
-
+Dlabel(2,11,'- Pending rewards are not guaranteed. PoP protocol constantly',65,alLeft,white,black);
+Dlabel(2,12,'  verify all participants balances to get a better distribution.',65,alLeft,white,black);
 Repeat
    sleep(1);
    KeyCode := KeyPressedCode;

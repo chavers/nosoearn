@@ -76,8 +76,8 @@ Procedure DecreaseOMT();
 Function GetOMTValue():Integer;
 
 Const
-  AppVer            = '2.1';
-  ReleaseDate       = 'Apr 15, 2023';
+  AppVer            = '2.2';
+  ReleaseDate       = 'Apr 28, 2023';
   HasheableChars    = '!"#$%&'#39')*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~';
   DeveloperAddress  = 'N3VXG1swUP3n46wUSY5yQmqQiHoaDED';
   NTPServers        = 'ts2.aco.net:hora.roa.es:time.esa.int:time.stdtime.gov.tw:stratum-1.sjc02.svwh.net:ntp1.sp.se:1.de.pool.ntp.org:';

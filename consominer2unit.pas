@@ -36,6 +36,13 @@ Type
      Diff   : string;
      end;
 
+   TAveEarning = Packed Record
+     block   : integer;
+     balance : int64;
+     change  : int64;
+     end;
+
+
 
 Procedure LoadSources();
 Function GetPoolInfo(PoolIp:String;PoolPort:integer):String;
@@ -75,6 +82,12 @@ Procedure SetOMT(value:integer);
 Procedure DecreaseOMT();
 Function GetOMTValue():Integer;
 
+//*************
+Procedure CreateAveEarnsFile();
+Procedure LoadAveArrayFromFile();
+Procedure AveArraryAddNewrecord();
+Function GetAverageEarnings():Int64;
+
 Const
   AppVer            = '2.2';
   ReleaseDate       = 'Apr 28, 2023';
@@ -110,7 +123,7 @@ var
   MyCPUCount           : integer = 1;
   MyHAshlib            : integer = 70;
   MyRunTest            : boolean  = True;
-  MyMaxShares          : integer = 0;
+  MyMaxShares          : integer = 1;
   MyDonation           : integer = 5;
   MyPassword           : string = 'mypasswrd';
   // Miner Variables
@@ -141,6 +154,9 @@ var
   U_AddressNosoBalance : boolean = false;
   U_TotalPending       : boolean = false;
   U_NewPayment         : int64 = 0;
+  // Average Earnings
+  Array_AveEarns       : array of TAveEarning;
+  File_AveEarns        : file of TAveEarning;
 
   // Crititical sections
   CS_Log          : TRTLCriticalSection;
@@ -405,31 +421,32 @@ TRY
 rewrite(FileConfig);
 writeln(FileConfig,'** Replace the default mining address with your own address. Aliases not allowed.');
 writeln(FileConfig,'address '+MyAddress);
-writeln(FileConfig,'** Set the number of CPUs/Threads you want use to mine.');
-writeln(FileConfig,'cpu '+MyCPUCount.ToString);
-writeln(FileConfig,'** Valid values: 65,68,69 and 70 (default).');
-writeln(FileConfig,'hashlib '+MyHashLib.ToString);
+//writeln(FileConfig,'** Set the number of CPUs/Threads you want use to mine.');
+//writeln(FileConfig,'cpu '+MyCPUCount.ToString);
+//writeln(FileConfig,'** Valid values: 65,68,69 and 70 (default).');
+//writeln(FileConfig,'hashlib '+MyHashLib.ToString);
 writeln(FileConfig,'** Change to false to start mining when you launch the app.');
 writeln(FileConfig,'test '+BoolToStr(MyRunTest,true));
-writeln(FileConfig,'** Max number of shares to be submitted to each pool. Use 0 to use pool defined.');
-writeln(FileConfig,'maxshares '+MyMaxShares.ToString);
+//writeln(FileConfig,'** Max number of shares to be submitted to each pool. Use 0 to use pool defined.');
+//writeln(FileConfig,'maxshares '+MyMaxShares.ToString);
 writeln(FileConfig,'** Enter a valid number between 0-99 as your % volunteer donation for developer.');
 writeln(FileConfig,'donate '+MyDonation.ToString);
-writeln(FileConfig,'** Enter your password to be identified by the pools. 8-16 Base58 chars length.');
-writeln(FileConfig,'password '+MyPassword);
-writeln(FileConfig,'** Enter one earning pool per line on format IPv4:port. None to use default');
+writeln(FileConfig,'** Enter your customseed to be identified by the pools. 8-16 chars length.');
+writeln(FileConfig,'customseed '+MyPassword);
+writeln(FileConfig,'** Enter one POP validator per line on format "validator Host:port". None to use default ones.');
+writeln(FileConfig,'** Example: validator pool.nosofish.xyz:8082');
 if bydefault then
    begin
-   writeln(FileConfig,'pool pool.nosofish.xyz:8082');
-   writeln(FileConfig,'pool pool.noso-akkarin.com:8082');
-   writeln(FileConfig,'pool nosopool.estripa.online:8082');
-   writeln(FileConfig,'pool pool.nosomn.com:8082');
-   writeln(FileConfig,'pool 47.87.181.190:8082');
+   writeln(FileConfig,'validator pool.nosofish.xyz:8082');
+   writeln(FileConfig,'validator pool.noso-akkarin.com:8082');
+   writeln(FileConfig,'validator nosopool.estripa.online:8082');
+   writeln(FileConfig,'validator pool.nosomn.com:8082');
+   writeln(FileConfig,'validator 47.87.181.190:8082');
    end
 else
   begin
   for counter := 0 to length(ArrSources)-1 do
-     writeln(FileConfig,'pool '+ArrSources[counter].ip+':'+ArrSources[counter].port.ToString);
+     writeln(FileConfig,'validator '+ArrSources[counter].ip+':'+ArrSources[counter].port.ToString);
   end;
 CloseFile(FileConfig);
 EXCEPT ON E:EXCEPTION do
@@ -448,16 +465,20 @@ while not eof(FileConfig) do
    begin
    readln(FileConfig,linea);
    if uppercase(Parameter(linea,0)) = 'ADDRESS' then MyAddress := Parameter(linea,1);
-   if uppercase(Parameter(linea,0)) = 'CPU' then MyCPUCount := StrToIntDef(Parameter(linea,1),1);
-   if uppercase(Parameter(linea,0)) = 'HASHLIB' then MyHashLib := StrToIntDef(Parameter(linea,1),70);
+   //if uppercase(Parameter(linea,0)) = 'CPU' then MyCPUCount := StrToIntDef(Parameter(linea,1),1);
+   //if uppercase(Parameter(linea,0)) = 'HASHLIB' then MyHashLib := StrToIntDef(Parameter(linea,1),70);
    if uppercase(Parameter(linea,0)) = 'TEST' then MyRunTest := StrToBoolDef(Parameter(linea,1),false);
-   if uppercase(Parameter(linea,0)) = 'MAXSHARES' then MyMaxShares := StrToIntDef(Parameter(linea,1),9999);
-   if MyMaxShares < 1 then MyMaxShares := 9999;
+   //if uppercase(Parameter(linea,0)) = 'MAXSHARES' then MyMaxShares := StrToIntDef(Parameter(linea,1),9999);
+   //if MyMaxShares < 1 then MyMaxShares := 9999;
    if uppercase(Parameter(linea,0)) = 'DONATE' then MyDonation := StrToIntDef(Parameter(linea,1),5);
-   if uppercase(Parameter(linea,0)) = 'PASSWORD' then MyPassword := Parameter(linea,1);
+   if uppercase(Parameter(linea,0)) = 'CUSTOMSEED' then MyPassword := Parameter(linea,1);
    if uppercase(Parameter(linea,0)) = 'POOL' then SourcesStr := SourcesStr+Parameter(linea,1)+' ';
+   if uppercase(Parameter(linea,0)) = 'VALIDATOR' then SourcesStr := SourcesStr+Parameter(linea,1)+' ';
    end;
 CloseFile(FileConfig);
+MyCPUCount := 1;
+MyHashLib := 70;
+MyMaxShares := 1;
 Trim(SourcesStr);
 EXCEPT ON E:EXCEPTION do
    begin
@@ -745,12 +766,103 @@ Result := OpenMinerThreads;
 LeaveCriticalSection(CS_MinerThreads);
 End;
 
+// Average Earnings
+
+Procedure CreateAveEarnsFile();
+Begin
+TRY
+   rewrite(File_AveEarns);
+   CloseFile(File_AveEarns);
+EXCEPT ON E:EXCEPTION do
+   begin
+   end
+END {TRY};
+End;
+
+Procedure LoadAveArrayFromFile();
+var
+  LastRecord, counter : integer;
+  ThisRecord : TAveEarning;
+Begin
+SetLength(Array_AveEarns,0);
+TRY
+   reset(File_AveEarns);
+   LastRecord := FileSize(File_AveEarns)-24;
+   If lastRecord < 0 then LastRecord := 0;
+   For Counter := FileSize(File_AveEarns)-1 downto LastRecord do
+      begin
+      Seek(File_AveEarns,Counter);
+      Read(File_AveEarns,ThisRecord);
+      Insert(ThisRecord,Array_AveEarns,length(Array_AveEarns));
+      end;
+   CloseFile(File_AveEarns);
+EXCEPT ON E:EXCEPTION do
+   begin
+   end
+END {TRY};
+End;
+
+Function GetAveArrLastBlock():integer;
+Begin
+if length(Array_AveEarns)>0 then result := Array_AveEarns[0].block
+else result := 0;
+End;
+
+Function GetAveArrLastBalance():int64;
+Begin
+if length(Array_AveEarns)>0 then result := Array_AveEarns[0].balance
+else result := 0;
+End;
+
+Procedure AveArraryAddNewrecord();
+var
+  ThisRecord : TAveEarning;
+Begin
+If GetAveArrLastBlock = CurrentBlock then exit;
+ThisRecord := Default(TAveEarning);
+ThisRecord.block:=CurrentBlock;
+ThisRecord.balance:=GetTotalPending;
+if length(Array_AveEarns)>0 then ThisRecord.change:=GetTotalPending-GetAveArrLastBalance
+else ThisRecord.change:=0;
+Insert(ThisRecord,Array_AveEarns,0);
+if length(Array_AveEarns)>24 then SetLength(Array_AveEarns,24);
+TRY
+   reset(File_AveEarns);
+   Seek(File_AveEarns,FileSize(File_AveEarns));
+   write(File_AveEarns,ThisRecord);
+   CloseFile(File_AveEarns);
+EXCEPT ON E:EXCEPTION do
+   begin
+   end
+END {TRY};
+End;
+
+Function GetAverageEarnings():Int64;
+var
+  counter,valid,total, perblock :int64;
+Begin
+Result := 0;
+valid := 0; total := 0;
+for counter := 0 to length(Array_AveEarns)-1 do
+   begin
+   if Array_AveEarns[counter].change>0 then
+      begin
+      Inc(Valid);
+      Inc(Total, Array_AveEarns[counter].change);
+      end;
+   end;
+if valid>0 then PerBlock := Total div Valid
+else PerBlock := 0;
+Result := Perblock * 144;
+End;
 
 INITIALIZATION
 Assignfile(FileConfig, 'nosoearn.cfg');
 Assignfile(FileLog, 'log.txt');
 Assignfile(FilePayments, 'payments.dat');
 Assignfile(FileRAWPayments, 'payments.txt');
+Assignfile(File_AveEarns, 'aveearns.dat');
+
 
 
 ArrHashLibs[0]:=65;ArrHashLibs[1]:=68;ArrHashLibs[2]:=69;ArrHashLibs[3]:=70;
@@ -762,6 +874,7 @@ InitCriticalSection(CS_MinerThreads);
 
 SetLength(ArrSolutions,0);
 SetLength(ArrLogLines,0);
+SetLength(Array_AveEarns,0);
 
 
 FINALIZATION

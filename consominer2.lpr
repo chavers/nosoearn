@@ -127,11 +127,25 @@ For counter := 0 to length(ArrSources)-1 do
 U_ClearPoolsScreen := false;
 End;
 
+PRocedure UpdateAverageEarnings();
+var
+  textCCol : integer;
+  Amount   : int64;
+BEgin
+Amount := GetAverageEarnings;
+textCCol := green;
+if Amount < 40000000 then textCCol := Yellow;
+if Amount < 20000000 then textCCol := Red;
+DLabel(39,8,'24h Estimated: ',15,AlRight,white,black);
+DLabel(53,8,Int2Curr(Amount),12,AlRight,textCCol,black);
+End;
+
 Procedure LaunchMiners();
 var
   SourceResult : integer;
   Counter      : integer;
 Begin
+UpdateAverageEarnings;
 Setstatusmsg('Syncing...',yellow);
 Repeat
    SourceResult := CheckSource;
@@ -144,6 +158,7 @@ FinishMiners := false;
 WrongThisPool := 0;
 ClearSolutions();
 LastSpeedCounter := 100000000;
+
 for counter := 1 to MyCPUCount do
    begin
    MinerThread := TMinerThread.Create(true,counter);
@@ -169,6 +184,7 @@ While not FinishProgram do
       U_WaitNextBlock  := true;
       ToLog('Started waiting next block');
       UpdateOffset(NTPServers);
+      AveArraryAddNewrecord;
       end;
    if ( (blockAge>=10) and (blockage<585) ) then
       begin
@@ -214,9 +230,8 @@ End;
 Procedure Updateheader();
 Begin
 TextOut(2,7,format(' Address: %-37s %15s ',[myaddress,Int2Curr(MyAddressBalance)]),lightgray,black);
-TextOut(2,8,Format(' Block: %8s | Age: %3s | CPUs: %2s / %2s | Speed: %10s |',[IntToStr(CurrentBlock),IntToStr(CurrBlockAge),
-                  IntToStr(MyCPUCount),IntToStr(MaxCPU),HashrateToShow(CurrSpeed)]),lightgray,black);
-TextOut(2,9,Format(' Uptime: %8s | Payments: %3s | Received: %12s | %2s |',[Uptime(MinerStartUTC),IntToStr(ReceivedPayments),Int2curr(ReceivedNoso),IntToStr(MyHashLib)]),lightgray,black);
+TextOut(2,8,Format(' Block: %8s | Age: %3s',[IntToStr(CurrentBlock),IntToStr(CurrBlockAge)]),lightgray,black);
+TextOut(2,9,Format(' Uptime: %8s | Payments: %3s | Received: %17s',[Uptime(MinerStartUTC),IntToStr(ReceivedPayments),Int2curr(ReceivedNoso)]),lightgray,black);
 DWindow(1,6,66,10,'',lightgray,black);
 TextOut(1,10,LChar[10],lightgray,black);
 TextOut(66,10,LChar[8],lightgray,black);
@@ -227,7 +242,7 @@ End;
 Procedure UpdateBlockAge();
 Begin
 TextOut(11,9,Format('%8s',[Uptime(MinerStartUTC)]),Lightgray,black);
-TextOut(55,8,Format('%10s',[HashrateToShow(GetTotalHashes)]),Lightgray,black);
+//TextOut(55,8,Format('%10s',[HashrateToShow(GetTotalHashes)]),Lightgray,black);
 TextOut(26,8,Format('%3s',[IntToStr(BlockAge)]),Lightgray,black);
 Dlabel(48,25,TimestampToDate(UTCTime),22,Alcenter,white,lightBlue);
 GotoXy(1,25);
@@ -266,10 +281,10 @@ end;
 
 Procedure UpdateNextBlockMessage();
 Begin
-DLabel(10,20,'',40,AlCenter,lightGray,black);
+DLabel(10,21,'',40,AlCenter,lightGray,black);
 if WaitingNextBlock then
    begin
-   DLabel(10,20,'Waiting next block',40,AlCenter,White,red);
+   DLabel(10,21,'Waiting next block',40,AlCenter,White,red);
    SetStatusmsg(' ',white);
    end;
 U_WaitNextBlock := false;
@@ -292,7 +307,9 @@ TextOut(1,12,LChar[10],lightgray,black);
 TextOut(69,12,LChar[6],lightgray,black);
 TextOut(1,13,LChar[10],lightgray,black);
 TextOut(69,13,LChar[6],lightgray,black);
-TextOut(3,11,'Noso project PoP coins distribution',lightgray,black);
+if MYAddress = 'NpryectdevepmentfundsGE' then
+   TextOut(3,11,'Warning: You need to change the address (Settings)',red,black)
+else TextOut(3,11,'Noso project PoP coins distribution',lightgray,black);
 //TextOut(2,11,format(' %0:-17s | %6s | %6s | %12s | %3s | %6s ',['Pool','Count','Fee','Balance','Pay','Shares']),yellow,black);
 for counter :=0 to -1 do //length(ArrSources)-1 do
     begin
@@ -315,9 +332,9 @@ if DetectedPools = 1 then
    begin
    TextOut(3,13,'Pending rewards :',lightgray,black);
    TextOut(3,15,' Disclaimer ',red,white);
-   TextOut(3,16,'Pending rewards are not guaranteed to be paid until participant',lightgray,black);
-   TextOut(3,17,'reach the minimun treshold active on each verificator. Those',lightgray,black);
-   TextOut(3,18,'earnings could also be re-distributed between other participants.',lightgray,black);
+   TextOut(3,16,'Pending rewards are not guaranteed to be paid until a participant',lightgray,black);
+   TextOut(3,17,'reaches the minimum threshold set by each PoP verifier.',lightgray,black);
+   TextOut(3,18,'See docs.nosocoin.com for current payment threshold.',lightgray,black);
    TextOut(3,19,'Do not consider pending as your coins until it is paid.',lightgray,black);
    TextOut(3,20,'For more information read <<help>> page.',lightgray,black);
    end;
@@ -347,36 +364,30 @@ var
    procedure showData();
    Begin
    DLabel(22,9,MyAddress,38,AlLeft,lightgray,black);
-   DLabel(22,10,MyCPUCount.ToString,38,AlLeft,lightgray,black);
-   DLabel(22,11,MyHAshlib.ToString,38,AlLeft,lightgray,black);
-   DLabel(22,12,MyMaxShares.ToString,38,AlLeft,lightgray,black);
-   DLabel(22,13,MyDonation.ToString,38,AlLeft,lightgray,black);
-   DLabel(22,14,MyPassword,38,AlLeft,lightgray,black);
-   Dlabel(2,16,'Save & Run',17,alCenter,black,brown);
-   Dlabel(22,16,'Save & Menu',17,alCenter,black,brown);
-   Dlabel(42,16,'Menu',17,alCenter,black,brown);
+   DLabel(22,10,MyDonation.ToString,38,AlLeft,lightgray,black);
+   DLabel(22,11,MyPassword,38,AlLeft,lightgray,black);
+   Dlabel(2,13,'Save & Run',17,alCenter,black,brown);
+   Dlabel(22,13,'Save & Menu',17,alCenter,black,brown);
+   Dlabel(42,13,'Menu',17,alCenter,black,brown);
    End;
 
 Begin
 Result := 0;
 BKColor(black);
 cls(1,6,80,25);
-DWindow(1,8,60,15,'',white,black);
+DWindow(1,8,60,12,'',white,black);
 DLabel(1,6,'Nosoearn Configuration',70,AlCenter,yellow,Green);
-VertLine(20,8,15,white,black,true);
+VertLine(20,8,12,white,black,true);
 TextOut(3,9,'Noso address',yellow,black);
-TextOut(3,10,Format('CPUs [%d]',[MaxCPU]),yellow,black);
-TextOut(3,11,'Hashlib',yellow,black);
-TextOut(3,12,'Block shares',yellow,black);
-TextOut(3,13,'Donate %',yellow,black);
-TextOut(3,14,'Password',yellow,black);
+TextOut(3,10,'Donate %',yellow,black);
+TextOut(3,11,'Custom Seed',yellow,black);
 showData;
 ClrLine(25);
 DLabel(1,25,'['#24' '#25'] Navigate',16,AlCenter,white,green);
 DLabel(18,25,'[ENTER] Select',16,AlCenter,white,green);
 Repeat
-   If ActiveRow > 17 then ActiveRow := 9;
-   If ActiveRow < 9 then ActiveRow := 17;
+   If ActiveRow > 14 then ActiveRow := 9;
+   If ActiveRow < 9 then ActiveRow := 14;
    if ActiveRow=9 then
       begin
       GetEdit := ReadEditScreen(22,ActiveRow,MyAddress,38);
@@ -387,37 +398,13 @@ Repeat
       end
    else if ActiveRow = 10 then
       begin
-      GetEdit := ReadEditScreen(22,ActiveRow,MyCPUCount.ToString,38);
-      if GetEdit.OutKey = 80 then Inc(ActiveRow);
-      if GetEdit.OutKey = 72 then Dec(ActiveRow);
-      MyCPUCount := StrToIntDef(GetEdit.OutString,MyCPUCount);
-      showData;
-      end
-   else if ActiveRow = 11 then
-      begin
-      GetEdit := ReadEditScreen(22,ActiveRow,MyHAshlib.ToString,38);
-      if GetEdit.OutKey = 80 then Inc(ActiveRow);
-      if GetEdit.OutKey = 72 then Dec(ActiveRow);
-      MyHAshlib := StrToIntDef(GetEdit.OutString,MyHAshlib);
-      showData;
-      end
-   else if ActiveRow = 12 then
-      begin
-      GetEdit := ReadEditScreen(22,ActiveRow,MyMaxShares.ToString,38);
-      if GetEdit.OutKey = 80 then Inc(ActiveRow);
-      if GetEdit.OutKey = 72 then Dec(ActiveRow);
-      MyMaxShares := StrToIntDef(GetEdit.OutString,MyMaxShares);
-      showData;
-      end
-   else if ActiveRow = 13 then
-      begin
       GetEdit := ReadEditScreen(22,ActiveRow,MyDonation.ToString,38);
       if GetEdit.OutKey = 80 then Inc(ActiveRow);
       if GetEdit.OutKey = 72 then Dec(ActiveRow);
       MyDonation := StrToIntDef(GetEdit.OutString,MyDonation);
       showData;
       end
-   else if ActiveRow = 14 then
+   else if ActiveRow = 11 then
       begin
       GetEdit := ReadEditScreen(22,ActiveRow,MyPassword,38);
       if GetEdit.OutKey = 80 then Inc(ActiveRow);
@@ -428,13 +415,13 @@ Repeat
       MyPassword := GetEdit.OutString;
       showData;
       end
-   else if ActiveRow = 15 then
+   else if ActiveRow = 12 then
       begin
-      Dlabel(2,16,'Save & Run',17,alCenter,white,Green);
-      GotoXy(2,16);
+      Dlabel(2,13,'Save & Run',17,alCenter,white,Green);
+      GotoXy(2,13);
       NavKey := ReadNavigationKey;
-      if Navkey = 77 then ActiveRow := 16;
-      if Navkey = 72 then ActiveRow := 14;
+      if Navkey = 77 then ActiveRow := 13;
+      if Navkey = 72 then ActiveRow := 11;
       if Navkey = 80 then ActiveRow := 9;
       if navkey = 13 then
          begin
@@ -446,14 +433,14 @@ Repeat
          end;
       ShowData;
       end
-   else if ActiveRow = 16 then
+   else if ActiveRow = 13 then
       begin
-      Dlabel(22,16,'Save & Menu',17,alCenter,white,green);
-      GotoXy(22,16);
+      Dlabel(22,13,'Save & Menu',17,alCenter,white,green);
+      GotoXy(22,13);
       NavKey := ReadNavigationKey;
-      if Navkey = 77 then ActiveRow := 17;
-      if Navkey = 75 then ActiveRow := 15;
-      if Navkey = 72 then ActiveRow := 14;
+      if Navkey = 77 then ActiveRow := 14;
+      if Navkey = 75 then ActiveRow := 12;
+      if Navkey = 72 then ActiveRow := 11;
       if Navkey = 80 then ActiveRow := 9;
       if navkey = 13 then
          begin
@@ -463,13 +450,13 @@ Repeat
          end;
       ShowData;
       end
-   else if ActiveRow = 17 then
+   else if ActiveRow = 14 then
       begin
-      Dlabel(42,16,'Menu',17,alCenter,white,green);
-      GotoXy(42,16);
+      Dlabel(42,13,'Menu',17,alCenter,white,green);
+      GotoXy(42,13);
       NavKey := ReadNavigationKey;
-      if Navkey = 75 then ActiveRow := 16;
-      if Navkey = 72 then ActiveRow := 14;
+      if Navkey = 75 then ActiveRow := 13;
+      if Navkey = 72 then ActiveRow := 11;
       if Navkey = 80 then ActiveRow := 9;
       if navkey = 13 then
          begin
@@ -494,11 +481,19 @@ DLabel(1,6,'Nosoearn Help',70,AlCenter,yellow,Green);
 DLabel(1,25,' [Alt+X] Exit ',16,AlCenter,black,LightGray);
 DLabel(18,25,' [M] Menu ',16,AlCenter,white,blue);
 
-Dlabel(2,8, '- Use one Noso address per device.',50,alLeft,white,black);
-Dlabel(2,9, '- Use a different public IPv4 per device.',50,alLeft,white,black);
-Dlabel(2,10,'- Your password must be between 8 to 16 chars length.',53,alLeft,white,black);
-Dlabel(2,11,'- Pending rewards are not guaranteed. PoP protocol constantly',65,alLeft,white,black);
-Dlabel(2,12,'  verify all participants balances to get a better distribution.',65,alLeft,white,black);
+Dlabel(2,8, '- Your custom seed must be between 8 to 16 characters long.',65,alLeft,white,black);
+Dlabel(2,9, '- Use one Noso address per device and IPv4.',65,alLeft,white,black);
+Dlabel(2,10,'- Pending rewards are for informational purposes only and are',65,alLeft,white,black);
+Dlabel(2,11,'  not guaranteed. Do not consider your pending rewards as coins',65,alLeft,white,black);
+Dlabel(2,12,'  you have earned until they are paid out and sent to your wallet.',65,alLeft,white,black);
+Dlabel(2,13,'- If you miss participating for 24 hours, your outstanding rewards',65,alLeft,white,black);
+Dlabel(2,14,'  may be redistributed among the other participants.',65,alLeft,white,black);
+Dlabel(2,15,'- Switching your earner''s IPv4 address in between validator cycles',65,alLeft,white,black);
+Dlabel(2,16,'  may result in temporary ban from participation.',65,alLeft,white,black);
+Dlabel(2,17,'- Your reward may vary depending of your location in the world .',65,alLeft,white,black);
+
+
+
 Repeat
    sleep(1);
    KeyCode := KeyPressedCode;
@@ -656,7 +651,7 @@ Repeat
 until  (KeyCode = 11520) or (Keycode = 12909) or (Keycode = 12877);
    FinishMiners := true;
    FinishProgram := true;
-   DLabel(1,24,'Closing miner...',70,AlCenter,white,red);
+   DLabel(1,24,'Please wait...',70,AlCenter,white,red);
    Repeat
       sleep(1);
    until(GetOMTValue = 0);
@@ -682,11 +677,13 @@ if not FileExists('nosoearn.cfg') then CreateConfig(true);
 if not FileExists('log.txt') then CreateLogFile();
 if not FileExists('payments.dat') then CreatePaymentsFile();
 if not FileExists('payments.txt') then CreateRAWPaymentsFile();
+if not FileExists('aveearns.dat') then CreateAveEarnsFile();
 MaxCPU:= {$IFDEF UNIX}GetSystemThreadCount{$ELSE}GetCPUCount{$ENDIF};
 LoadConfig();
 if SourcesStr = '' then SourcesStr := DefaultSources;
 LoadSources();
 CreateConfig();
+LoadAveArrayFromFile;
 LoadPreviousPayments;
 
 TextOut(1,1,'   / | / /___  _________  ___  ____ __________ ',white,black);

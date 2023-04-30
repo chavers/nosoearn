@@ -127,6 +127,16 @@ For counter := 0 to length(ArrSources)-1 do
 U_ClearPoolsScreen := false;
 End;
 
+Procedure UpdateParticipating();
+Begin
+DLabel(48,11,' Participating ',15,AlRight,White,Green);
+end;
+
+Procedure UpdateNotParticipating();
+Begin
+DLabel(48,11,'               ',15,AlRight,White,black);
+end;
+
 PRocedure UpdateAverageEarnings();
 var
   textCCol : integer;
@@ -168,7 +178,7 @@ FinishMiners := false;
 WrongThisPool := 0;
 ClearSolutions();
 LastSpeedCounter := 100000000;
-
+UpdateParticipating;
 for counter := 1 to MyCPUCount do
    begin
    MinerThread := TMinerThread.Create(true,counter);
@@ -284,8 +294,13 @@ StatusMsg := '';
 End;
 
 Procedure UpdateTotalPending();
+var
+  amount : int64;
+  Bkcol  : integer;
 Begin
-DLabel(56,13,Int2Curr(GetTotalPending),12,AlRight,White,green);
+amount := GetTotalPending;
+if Amount > 0 then BkCOl := green else BKCol := Black;
+DLabel(56,13,Int2Curr(amount),12,AlRight,White,BKCol);
 U_TotalPending := false;
 end;
 
@@ -294,6 +309,7 @@ Begin
 DLabel(10,21,'',40,AlCenter,lightGray,black);
 if WaitingNextBlock then
    begin
+   UpdateNotParticipating;
    //DLabel(10,21,'Waiting next block',40,AlCenter,White,red);
    SetStatusmsg(' ',white);
    end;
@@ -317,6 +333,7 @@ TextOut(1,12,LChar[10],lightgray,black);
 TextOut(69,12,LChar[6],lightgray,black);
 TextOut(1,13,LChar[10],lightgray,black);
 TextOut(69,13,LChar[6],lightgray,black);
+UpdateTotalPending;
 if MYAddress = 'NpryectdevepmentfundsGE' then
    TextOut(3,11,'Warning: You need to change the address (Settings)',red,black)
 else TextOut(3,11,'Noso project PoP coins distribution',lightgray,black);

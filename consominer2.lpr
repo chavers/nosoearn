@@ -130,14 +130,24 @@ End;
 PRocedure UpdateAverageEarnings();
 var
   textCCol : integer;
-  Amount   : int64;
+  Amount   : int64 = 0;
+  ToShow   : String = '';
 BEgin
-Amount := GetAverageEarnings;
-textCCol := green;
-if Amount < 40000000 then textCCol := Yellow;
-if Amount < 20000000 then textCCol := Red;
-DLabel(39,8,'24h Estimated: ',15,AlRight,white,black);
-DLabel(53,8,Int2Curr(Amount),12,AlRight,textCCol,black);
+if length(Array_AveEarns)<3 then
+   begin
+   ToShow := 'Calculating';
+   textCCol := white;
+   end
+else
+  begin
+  Amount := GetAverageEarnings;
+  ToShow := Int2Curr(Amount);
+  textCCol := green;
+  if Amount < 40000000 then textCCol := Yellow;
+  if Amount < 20000000 then textCCol := Red;
+  end;
+DLabel(31,8,'24h Estimated Reward: ',23,AlRight,white,black);
+DLabel(53,8,ToShow,12,AlRight,textCCol,black);
 End;
 
 Procedure LaunchMiners();
@@ -230,7 +240,7 @@ End;
 Procedure Updateheader();
 Begin
 TextOut(2,7,format(' Address: %-37s %15s ',[myaddress,Int2Curr(MyAddressBalance)]),lightgray,black);
-TextOut(2,8,Format(' Block: %8s | Age: %3s',[IntToStr(CurrentBlock),IntToStr(CurrBlockAge)]),lightgray,black);
+TextOut(2,8,Format(' Block: %8s | Age: %3s |',[IntToStr(CurrentBlock),IntToStr(CurrBlockAge)]),lightgray,black);
 TextOut(2,9,Format(' Uptime: %8s | Payments: %3s | Received: %17s',[Uptime(MinerStartUTC),IntToStr(ReceivedPayments),Int2curr(ReceivedNoso)]),lightgray,black);
 DWindow(1,6,66,10,'',lightgray,black);
 TextOut(1,10,LChar[10],lightgray,black);
@@ -284,7 +294,7 @@ Begin
 DLabel(10,21,'',40,AlCenter,lightGray,black);
 if WaitingNextBlock then
    begin
-   DLabel(10,21,'Waiting next block',40,AlCenter,White,red);
+   //DLabel(10,21,'Waiting next block',40,AlCenter,White,red);
    SetStatusmsg(' ',white);
    end;
 U_WaitNextBlock := false;

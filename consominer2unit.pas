@@ -845,7 +845,7 @@ Result := 0;
 valid := 0; total := 0;
 for counter := 0 to length(Array_AveEarns)-1 do
    begin
-   if Array_AveEarns[counter].change>0 then
+   if Array_AveEarns[counter].change>=0 then
       begin
       Inc(Valid);
       Inc(Total, Array_AveEarns[counter].change);

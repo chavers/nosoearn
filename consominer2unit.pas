@@ -90,7 +90,7 @@ Function GetAverageEarnings():Int64;
 
 Const
   AppVer            = '2.2';
-  ReleaseDate       = 'Apr 28, 2023';
+  ReleaseDate       = 'Apr 30th, 2023';
   HasheableChars    = '!"#$%&'#39')*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~';
   DeveloperAddress  = 'N3VXG1swUP3n46wUSY5yQmqQiHoaDED';
   NTPServers        = 'ts2.aco.net:hora.roa.es:time.esa.int:time.stdtime.gov.tw:stratum-1.sjc02.svwh.net:ntp1.sp.se:1.de.pool.ntp.org:';
@@ -546,7 +546,7 @@ if PoolString<> 'ERROR' then // Pool reached
 else
    begin
    Inc(ArrSources[ActivePool].FailedTrys);
-   Tolog('Connection error. Check your internet connection');
+   //Tolog('Connection error. Check your internet connection');
    if ArrSources[ActivePool].FailedTrys >= 5 then
       begin
       ArrSources[ActivePool].filled:=true;

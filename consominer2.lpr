@@ -65,7 +65,7 @@ var
   ThisPrefix : string = '';
   MyCounter : int64 = 100000000;
   EndThisThread : boolean = false;
-  ThreadBest  : string = '00000FFFFFFFFFFFFFFFFFFFFFFFFFFF';
+  ThreadBest  : string = '0000FFFFFFFFFFFFFFFFFFFFFFFFFFFF';
 Begin
 if MyRunTest then MinimunTargetDiff := '00000';
 MyID := TNumber-1;
@@ -607,15 +607,13 @@ DLabel(1,25,' [Alt+X] Exit ',16,AlCenter,black,LightGray);
 DLabel(18,25,' [M] Mine ',16,AlCenter,white,blue);
 DLabel(35,25,' [S] Settings ',16,AlCenter,black,lightblue);
 DLabel(52,25,' [H] Help ',16,AlCenter,black,green);
-Dwindow(10,8,60,16,'',white,black);
-Vertline (30,9,15,white,black);
+Dwindow(10,8,60,14,'',white,black);
+Vertline (30,9,13,white,black);
 Horizline(10,10,60,white,black,true);
 Horizline(12,10,60,white,black,true);
-Horizline(14,10,60,white,black,true);
 TextOut(12,9,'Freepascal ver',yellow, black);TextOut(32,9,fpcVersion,white, black);
 TextOut(12,11,'Release date',yellow, black);TextOut(32,11,ReleaseDate,white, black);
-TextOut(12,13,'CPUs/Threads',yellow, black);TextOut(32,13,MaxCPU.ToString,white, black);
-TextOut(12,15,'Codepage',yellow, black);TextOut(32,15,GetTextCodePage(Output).ToString,white, black);
+TextOut(12,13,'Codepage',yellow, black);TextOut(32,13,GetTextCodePage(Output).ToString,white, black);
 Gotoxy(1,25);
 Repeat
    sleep(1);

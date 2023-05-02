@@ -156,8 +156,8 @@ else
   if Amount < 40000000 then textCCol := Yellow;
   if Amount < 20000000 then textCCol := Red;
   end;
-DLabel(31,8,'24h Estimated Reward: ',23,AlRight,white,black);
-DLabel(53,8,ToShow,12,AlRight,textCCol,black);
+//DLabel(31,8,'24h Estimated Reward: ',23,AlRight,white,black);
+DLabel(56,13,ToShow,12,AlRight,textCCol,black);
 End;
 
 Procedure LaunchMiners();
@@ -298,6 +298,7 @@ var
   amount : int64;
   Bkcol  : integer;
 Begin
+exit;
 amount := GetTotalPending;
 if Amount > 0 then BkCOl := green else BKCol := Black;
 DLabel(56,13,Int2Curr(amount),12,AlRight,White,BKCol);
@@ -357,12 +358,12 @@ TextOut(1,13+DetectedPools,LChar[9],white,black);
 TextOut(69,13+DetectedPools,LChar[7],white,black);
 if DetectedPools = 1 then
    begin
-   TextOut(3,13,'Pending rewards :',lightgray,black);
+   TextOut(3,13,'24h Estimated Reward:',lightgray,black);
    TextOut(3,15,' Disclaimer ',red,white);
-   TextOut(3,16,'Pending rewards are not guaranteed to be paid until a participant',lightgray,black);
+   TextOut(3,16,'Estimated rewards are not guaranteed to be paid until a participant',lightgray,black);
    TextOut(3,17,'reaches the minimum threshold set by each PoP verifier.',lightgray,black);
    TextOut(3,18,'See docs.nosocoin.com for current payment threshold.',lightgray,black);
-   TextOut(3,19,'Do not consider pending as your coins until it is paid.',lightgray,black);
+   TextOut(3,19,'Do not consider estimated as your coins until it is paid.',lightgray,black);
    TextOut(3,20,'For more information read <<help>> page.',lightgray,black);
    end;
 End;
@@ -510,14 +511,10 @@ DLabel(18,25,' [M] Menu ',16,AlCenter,white,blue);
 
 Dlabel(2,8, '- Your custom seed must be between 8 to 16 characters long.',65,alLeft,white,black);
 Dlabel(2,9, '- Use one Noso address per device and IPv4.',65,alLeft,white,black);
-Dlabel(2,10,'- Pending rewards are for informational purposes only and are',65,alLeft,white,black);
-Dlabel(2,11,'  not guaranteed. Do not consider your pending rewards as coins',65,alLeft,white,black);
-Dlabel(2,12,'  you have earned until they are paid out and sent to your wallet.',65,alLeft,white,black);
-Dlabel(2,13,'- If you miss participating for 24 hours, your outstanding rewards',65,alLeft,white,black);
-Dlabel(2,14,'  may be redistributed among the other participants.',65,alLeft,white,black);
-Dlabel(2,15,'- Switching your earner''s IPv4 address in between validator cycles',65,alLeft,white,black);
-Dlabel(2,16,'  may result in temporary ban from participation.',65,alLeft,white,black);
-Dlabel(2,17,'- Your reward may vary depending of your location in the world .',65,alLeft,white,black);
+Dlabel(2,10,'- Estimated rewards are for informational purposes only and are',65,alLeft,white,black);
+Dlabel(2,11,'  not guaranteed. Do not consider your estimated rewards as coins',65,alLeft,white,black);
+Dlabel(2,12,'  you have earned until they are paid out and sent to your wallet.',70,alLeft,white,black);
+Dlabel(2,13,'- Rewards may vary between IPv4 geolocation.',65,alLeft,white,black);
 
 
 

@@ -225,7 +225,6 @@ var
   OutText : string;
   Whites  : integer;
 Begin
-{$IFDEF MacOS} BacCol := green; forcol := white;{$ENDIF}
 if LEngth(Texto)>LWidth then SetLEngth(Texto,LWidth);
 Whites := (LWidth div 2)-(LEngth(Texto) div 2);
 if LAling = AlLeft then OutText := Format('%0:-'+Lwidth.ToString+'s',[Texto])

@@ -207,7 +207,7 @@ TCPclient.ConnectTimeout:= 3000;
 TCPclient.ReadTimeout:=3000;
 TRY
 TCPclient.Connect;
-TCPclient.IOHandler.WriteLn('SOURCE '+MyAddress+' Cm2'+AppVer+' '+HashMD5String(mypassword+Myaddress+TCPclient.Host));
+TCPclient.IOHandler.WriteLn('SOURCE '+MyAddress+' ConE'+AppVer+' '+HashMD5String(mypassword+Myaddress+TCPclient.Host));
 ResultLine := TCPclient.IOHandler.ReadLn(IndyTextEncoding_UTF8);
 TCPclient.Disconnect();
 EXCEPT on E:Exception do
@@ -244,7 +244,7 @@ Success := false;
 Inc(Trys);
 TRY
 TCPclient.Connect;
-TCPclient.IOHandler.WriteLn('SHARE '+Myaddress+' '+Data.Hash+' Cm2v'+AppVer+' '+CurrentBlock.ToString+' '+Data.target+' '+CreditAddress+' '+HashMD5String(mypassword+Myaddress+TCPclient.Host));
+TCPclient.IOHandler.WriteLn('SHARE '+Myaddress+' '+Data.Hash+' ConEv'+AppVer+' '+CurrentBlock.ToString+' '+Data.target+' '+CreditAddress+' '+HashMD5String(mypassword+Myaddress+TCPclient.Host));
 ResultLine := TCPclient.IOHandler.ReadLn(IndyTextEncoding_UTF8);
 TCPclient.Disconnect();
 Success := true;
@@ -310,7 +310,7 @@ SetLEngth(ArrSources,0);
 Repeat
    begin
    ThisSource := Parameter(SourcesStr,counter);
-   If ( (ThisSource<> '') and (Not AnsiContainsStr(Uppercase(AlreadyLoaded),Uppercase(ThisSource))) ) then
+   If ( (ThisSource<> '') and (Not AnsiContainsStr(AlreadyLoaded,Uppercase(ThisSource))) ) then
       begin
       ThisSource := StringReplace(ThisSource,':',' ',[rfReplaceAll, rfIgnoreCase]);
       SetLEngth(ArrSources,length(ArrSources)+1);
@@ -325,7 +325,7 @@ Repeat
       ArrSources[length(ArrSources)-1].Fee:=0;
       ArrSources[length(ArrSources)-1].LastPay:=GetPoolLastPay(Parameter(ThisSource,0));
       ArrSources[length(ArrSources)-1].maxshares:=MyMaxShares;
-      AlreadyLoaded := AlreadyLoaded + ThisSource;
+      AlreadyLoaded := AlreadyLoaded + Uppercase(ThisSource);
       end;
    Inc(Counter);
    end;
@@ -769,10 +769,21 @@ End;
 // Average Earnings
 
 Procedure CreateAveEarnsFile();
+var
+  LFile : Textfile;
+  BlSt,BaSt,ChSt,TxtLine : string;
 Begin
+AssignFile(Lfile,'aveearns.txt');
+BlSt := Format('%0:8s',['Block']);
+BaSt := Format('%0:12s',['PoPNet']);
+ChSt := Format('%0:12s',['Change']);
+TxtLine := Format('%s %s %s',[BlSt,BaSt,ChSt]);
 TRY
    rewrite(File_AveEarns);
    CloseFile(File_AveEarns);
+   rewrite(Lfile);
+   WriteLn(lfile,txtline);
+   CloseFile(Lfile);
 EXCEPT ON E:EXCEPTION do
    begin
    end
@@ -817,12 +828,24 @@ End;
 Procedure AveArraryAddNewrecord();
 var
   ThisRecord : TAveEarning;
+  LFile      : Textfile;
+  TxtLine    : String;
+  BlSt,BaSt,ChSt : string;
 Begin
+AssignFile(Lfile,'aveearns.txt');
 If GetAveArrLastBlock = CurrentBlock then exit;
 ThisRecord := Default(TAveEarning);
 ThisRecord.block:=CurrentBlock;
 ThisRecord.balance:=GetTotalPending;
-if length(Array_AveEarns)>0 then ThisRecord.change:=GetTotalPending-GetAveArrLastBalance
+if length(Array_AveEarns)>0 then
+   begin
+   if GetAveArrLastBalance>0 then
+      begin
+      ThisRecord.change:=GetTotalPending-GetAveArrLastBalance;
+      if ThisRecord.change<0 then ThisRecord.change:=0;
+      end
+   else ThisRecord.change:=0;
+   end
 else ThisRecord.change:=0;
 Insert(ThisRecord,Array_AveEarns,0);
 if length(Array_AveEarns)>24 then SetLength(Array_AveEarns,24);
@@ -831,6 +854,18 @@ TRY
    Seek(File_AveEarns,FileSize(File_AveEarns));
    write(File_AveEarns,ThisRecord);
    CloseFile(File_AveEarns);
+EXCEPT ON E:EXCEPTION do
+   begin
+   end
+END {TRY};
+BlSt := Format('%0:8s',[ThisRecord.block.ToString]);
+BaSt := Format('%0:12s',[Int2Curr(ThisRecord.balance)]);
+ChSt := Format('%0:12s',[Int2curr(ThisRecord.change)]);
+TxtLine := Format('%s %s %s',[BlSt,BaSt,ChSt]);
+TRY
+   Append(Lfile);
+   writeln(Lfile,TxtLine);
+   CloseFile(Lfile);
 EXCEPT ON E:EXCEPTION do
    begin
    end
